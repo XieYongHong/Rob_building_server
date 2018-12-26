@@ -179,7 +179,7 @@ router.get('/getRank', async ctx => {// 排行榜
 router.get('/getMoneyList', async ctx => {// 排行榜
     let success = true
     let message = '查询成功'
-    const arr = await query('select name,money from bonus order by floor desc limit 20')
+    const arr = await query('select name from user order by floor desc limit 20')
     if(!arr){
         success = false
         message = '查询失败'
