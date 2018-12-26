@@ -61,7 +61,7 @@ router.post('/getfloor', async ctx => {// 抢楼
     const today = await query(`select id from floor where create_time like '${queryTime}%' AND qq='${number}'`)
     const todayShare = await query(`select id from qq_share where create_time like '${queryTime}%' AND qq='${number}'`)
     const userMoney = await query(`select money from user where qq='${number}'`)
-    const userFloor = await query(`seletc * from floor where qq='${number}'`)
+    const userFloor = await query(`select * from floor where qq='${number}'`)
     const countNumber = todayShare.length ? 100 : 100
     if(userMoney.length > 0){
         data.money = userMoney[0].money
