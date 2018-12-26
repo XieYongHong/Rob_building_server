@@ -126,7 +126,7 @@ router.post('/share', async ctx => {
 router.post('/queryFloor', async ctx => {// 查询列表
     let success = true
     let message = '查询成功'
-    let dat = {}
+    let data = {}
 
     const {number}  = ctx.request.body
     
@@ -179,7 +179,7 @@ router.get('/getRank', async ctx => {// 排行榜
 router.get('/getMoneyList', async ctx => {// 排行榜
     let success = true
     let message = '查询成功'
-    const arr = await query('select name,money,img from bonus order by floor desc limit 20')
+    const arr = await query('select name,money from bonus order by floor desc limit 20')
     if(!arr){
         success = false
         message = '查询失败'
