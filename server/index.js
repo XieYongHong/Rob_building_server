@@ -71,7 +71,7 @@ router.post('/getfloor', async ctx => {// 抢楼
     if(today.length >= countNumber){
         return ctx.body = {
             data,
-            message:'今日抢楼数已达最大，分享可额外获得 10楼 机会。'
+            message:'今日抢楼数已达最大，分享可额外获得10次抢楼机会。'
         }
     }
     const numbers = await query('select * from floor')
@@ -126,7 +126,9 @@ router.post('/share', async ctx => {
 router.post('/queryFloor', async ctx => {// 查询列表
     let success = true
     let message = '查询成功'
-    let data = {}
+    let data = {
+        money:0
+    }
 
     const {number}  = ctx.request.body
     
