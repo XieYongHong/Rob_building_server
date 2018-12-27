@@ -11,6 +11,13 @@ let MONEY = 78.73 // 红包总金额
 router.post('/saveUserInfo',async ctx => { // 保存用户信息
     let success = true
     const {nickname,figureurl_qq_1,number}  = ctx.request.body
+    if(!nickname || nickname != 'null' || nickname != 'undefined' && typeof nickname === ''){
+        return ctx.body = {
+            data:[],
+            message:'请先登录',
+            success:false
+        }
+    }
     const nt = new Date()
     if(nt.valueOf() >= ENDTIME.valueOf()){
         ctx.body = {
@@ -55,6 +62,13 @@ router.post('/getfloor', async ctx => {// 抢楼
         }
     }
     const {nickname, figureurl_qq_1, number}  = ctx.request.body
+    if(!nickname || nickname != 'null' || nickname != 'undefined' && typeof nickname === ''){
+        return ctx.body = {
+            data:[],
+            message:'请先登录',
+            success:false
+        }
+    }
     const time = sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
     const queryTime = sd.format(new Date(), 'YYYY-MM-DD')
 
@@ -62,16 +76,18 @@ router.post('/getfloor', async ctx => {// 抢楼
     const todayShare = await query(`select id from qq_share where create_time like '${queryTime}%' AND qq='${number}'`)
     const userMoney = await query(`select money from user where qq='${number}'`)
     const userFloor = await query(`select * from floor where qq='${number}'`)
-    const countNumber = todayShare.length ? 100 : 100
+    const countNumber = todayShare.length ? 30 : 20
+    let _usermoney = 0
+    
     if(userMoney.length > 0){
-        data.money = userMoney[0].money
+        data.money = _usermoney = userMoney[0].money
     }
     data.floor = userFloor.length
-    
     if(today.length >= countNumber){
         return ctx.body = {
             data,
-            message:'今日抢楼数已达最大，分享可额外获得10次抢楼机会。'
+            message:'今日抢楼数已达最大，分享可额外获得10次抢楼机会。',
+            success : false
         }
     }
     const numbers = await query('select * from floor')
@@ -87,16 +103,16 @@ router.post('/getfloor', async ctx => {// 抢楼
 
             await query(`insert into bonus (qq,name,money,create_time) values ('${number}','${nickname}',${_money},'${time}')`)
             await query(`update user set money = money+${_money} where qq='${number}'`)
-            data.money  = Number(_money) + Number(userMoney[0].money)
+            data.money  = Number(_money) + Number(_usermoney)
         }
     }
-
+    await query(`update user set floor = floor+1 where qq='${number}'`)
+    data.floor += 1
     ctx.body = {
         data,
         message,
         success
     }
-    console.log('ceshi');
 })
 
 router.post('/share', async ctx => {
@@ -110,6 +126,13 @@ router.post('/share', async ctx => {
     }
     let message = '今天已经分享过了，请明天分享'
     const {number}  = ctx.request.body
+    if(!nickname || nickname != 'null' || nickname != 'undefined' && typeof nickname === ''){
+        return ctx.body = {
+            data:[],
+            message:'请先登录',
+            success:false
+        }
+    }
     const time = sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
     const nTime = sd.format(new Date(), 'YYYY-MM-DD')
     const numbers = await query(`select * from qq_share where qq='${number}' and create_time like '${nTime}%'`)
@@ -123,18 +146,14 @@ router.post('/share', async ctx => {
     }
 })
 
-router.post('/queryFloor', async ctx => {// 查询列表
+router.get('/queryFloor', async ctx => {// 查询列表
     let success = true
     let message = '查询成功'
     let data = {
         money:0
     }
 
-    const {number}  = ctx.request.body
-    
     const arr = await query('select * from floor  order by create_time desc limit 20')
-    const _floor = await query(`select * from floor where qq='${number}'`)
-    const _money = await query(`select money from user where qq='${number}'`)
 
     if(!arr){
         message = '查询失败'
@@ -145,7 +164,40 @@ router.post('/queryFloor', async ctx => {// 查询列表
         }
         data.list = arr
     }
+    
+    ctx.body = {
+        data,
+        message,
+        success
+    }
+})
 
+router.post('/getUserInfo', async ctx => {
+    
+    let success = true
+    let message = '查询成功'
+    let data = {
+        money:0,
+        floor:0
+    }
+    const {number}  = ctx.request.body
+    if(!nickname || nickname != 'null' || nickname != 'undefined' && typeof nickname === ''){
+        return ctx.body = {
+            data:[],
+            message:'请先登录',
+            success:false
+        }
+    }
+    const _floor = await query(`select * from floor where qq='${number}'`)
+    const _money = await query(`select money from user where qq='${number}'`)
+
+    if(!_floor && !_money){
+        return ctx.body = {
+                data: data,
+                message: message,
+                success: false
+            }
+    }
     data.floor = _floor.length
     
     if(_money.length > 0){
@@ -178,10 +230,10 @@ router.get('/getRank', async ctx => {// 排行榜
     }
 })
 
-router.get('/getMoneyList', async ctx => {// 排行榜
+router.get('/getMoneyList', async ctx => {// 获取奖金列表
     let success = true
     let message = '查询成功'
-    const arr = await query('select name from user order by floor desc limit 20')
+    const arr = await query('select name,money from bonus order by create_time desc limit 20')
     if(!arr){
         success = false
         message = '查询失败'
@@ -226,6 +278,16 @@ function red_envelopes(a){
         MONEY -= sMoney
         relove(sMoney)
     })
+}
+
+function vailLogin(ctx,name){
+    if(!name || name != 'null' || name != 'undefined' && typeof name === ''){
+        return ctx.body = {
+            data:[],
+            message:'请先登录',
+            success:false
+        }
+    }
 }
 
 module.exports = router
