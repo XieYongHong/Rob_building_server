@@ -62,7 +62,7 @@ router.post('/getfloor', async ctx => {// 抢楼
         }
     }
     const {nickname, figureurl_qq_1, number}  = ctx.request.body
-    if(!number || number != 'null' || number != 'undefined' && typeof number === ''){
+    if(!number || number == 'null' || number == 'undefined' && typeof number === ''){
         return ctx.body = {
             data:[],
             message:'请先登录',
@@ -126,7 +126,7 @@ router.post('/share', async ctx => {
     }
     let message = '今天已经分享过了，请明天分享'
     const {number}  = ctx.request.body
-    if(!number || number != 'null' || number != 'undefined' && typeof number === ''){
+    if(!number || number == 'null' || number == 'undefined' && typeof number === ''){
         return ctx.body = {
             data:[],
             message:'请先登录',
@@ -181,7 +181,7 @@ router.post('/getUserInfo', async ctx => {
         floor:0
     }
     const {number}  = ctx.request.body
-    if(!number || number != 'null' || number != 'undefined' && typeof number === ''){
+    if(!number || number == 'null' || number == 'undefined' && typeof number === ''){
         return ctx.body = {
             data:[],
             message:'请先登录',
