@@ -1,5 +1,6 @@
 const mysql = require('mysql')
 const config = require('../config/index.js')
+
 const pool = mysql.createPool({
     host: config.mysql.ip,
     user: config.mysql.user,

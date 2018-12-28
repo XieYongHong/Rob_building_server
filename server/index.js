@@ -10,19 +10,22 @@ let MONEY = 78.73 // 红包总金额
 
 router.post('/saveUserInfo',async ctx => { // 保存用户信息
     let success = true
+    let code = 0
     const {nickname,figureurl_qq_1,number}  = ctx.request.body
-    if(!number || number != 'null' || number != 'undefined' && typeof number === ''){
+    if(!number || number == 'null' || number == 'undefined'){
         return ctx.body = {
             data:[],
             message:'请先登录',
-            success:false
+            success:false,
+            code:1
         }
     }
     const nt = new Date()
     if(nt.valueOf() >= ENDTIME.valueOf()){
         ctx.body = {
             message:'活动已截止',
-            success:false
+            success:false,
+            code:9
         }
     }
     let message = '保存成功'
@@ -37,36 +40,44 @@ router.post('/saveUserInfo',async ctx => { // 保存用户信息
             data.money = 0.00
         }else{
             message = '保存失败'
-            success = false
+            success = false,
+            code = 2
         }
     }
     ctx.body = {
         message,
         data,
-        success
+        success,
+        code
     }
 })
 
 router.post('/getfloor', async ctx => {// 抢楼
     let success = true
     let message = '抢楼成功'
+    let code = 0
     let data = {
         money: 0,
-        floor: 0
+        floor: 0,
+        code:0,
+        getMoney:0
     }
     const nt = new Date()
     if(nt.valueOf() >= ENDTIME.valueOf()){
         ctx.body = {
             message:'活动已截止',
-            success:false
+            success:false,
+            code:9
         }
     }
     const {nickname, figureurl_qq_1, number}  = ctx.request.body
-    if(!number || number == 'null' || number == 'undefined' && typeof number === ''){
+    if(!number || number == 'null' || number == 'undefined'){
         return ctx.body = {
             data:[],
             message:'请先登录',
-            success:false
+            success:false,
+            getMoney:0,
+            code:1
         }
     }
     const time = sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
@@ -84,10 +95,15 @@ router.post('/getfloor', async ctx => {// 抢楼
     }
     data.floor = userFloor.length
     if(today.length >= countNumber){
+        message = '今日抢楼数已达最大，分享可额外获得10次抢楼机会。'
+        if(countNumber >= 30){
+            message = '今日抢楼数已达最大，请明天再来。'
+        }
         return ctx.body = {
             data,
-            message:'今日抢楼数已达最大，分享可额外获得10次抢楼机会。',
-            success : false
+            message,
+            success : false,
+            code:3
         }
     }
     const numbers = await query('select * from floor')
@@ -96,6 +112,7 @@ router.post('/getfloor', async ctx => {// 抢楼
     if(!floor){
         message = '抢楼失败'
         success = false
+        code = 1
     }else if(MONEY && numbers.length <= FLOOR){// 红包
         const lv = numbers.length >= 500 ? 3 : 4
         if(Math.ceil(Math.random()*10) < lv){
@@ -103,6 +120,7 @@ router.post('/getfloor', async ctx => {// 抢楼
 
             await query(`insert into bonus (qq,name,money,create_time) values ('${number}','${nickname}',${_money},'${time}')`)
             await query(`update user set money = money+${_money} where qq='${number}'`)
+            data.getMoney = Number(_money)
             data.money  = Number(_money) + Number(_usermoney)
         }
     }
@@ -111,22 +129,25 @@ router.post('/getfloor', async ctx => {// 抢楼
     ctx.body = {
         data,
         message,
-        success
+        success,
+        code
     }
 })
 
 router.post('/share', async ctx => {
     let success = true
+    let code = 0
     const nt = new Date()
     if(nt.valueOf() >= ENDTIME.valueOf()){
         ctx.body = {
             message:'活动已截止',
-            success:false
+            success:false,
+            code:9
         }
     }
     let message = '今天已经分享过了，请明天分享'
     const {number}  = ctx.request.body
-    if(!number || number == 'null' || number == 'undefined' && typeof number === ''){
+    if(!number || number == 'null' || number == 'undefined'){
         return ctx.body = {
             data:[],
             message:'请先登录',
@@ -142,7 +163,8 @@ router.post('/share', async ctx => {
     }
     ctx.body = {
         message,
-        success
+        success,
+        code
     }
 })
 
@@ -181,7 +203,7 @@ router.post('/getUserInfo', async ctx => {
         floor:0
     }
     const {number}  = ctx.request.body
-    if(!number || number == 'null' || number == 'undefined' && typeof number === ''){
+    if(!number || number == 'null' || number == 'undefined'){
         return ctx.body = {
             data:[],
             message:'请先登录',
