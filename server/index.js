@@ -4,7 +4,7 @@ const router = new Router()
 const sd = require('silly-datetime')
 
 const ENDTIME = new Date('2019-01-01 20:00:00')
-const STARTTIME = new Date('2018-12-29 20:00:00')
+const STARTTIME = new Date('2018-12-28 20:00:00')
 const FLOOR = 3344 // 楼层数
 const MIN = 0.01 // 最小金额
 let MONEY = 78.73 // 红包总金额
