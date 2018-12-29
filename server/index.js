@@ -4,6 +4,7 @@ const router = new Router()
 const sd = require('silly-datetime')
 
 const ENDTIME = new Date('2019-01-01 20:00:00')
+const STARTTIME = new Date('2018-12-29 20:00:00')
 const FLOOR = 3344 // 楼层数
 const MIN = 0.01 // 最小金额
 let MONEY = 78.73 // 红包总金额
@@ -63,14 +64,16 @@ router.post('/getfloor', async ctx => {// 抢楼
         getMoney:0
     }
     const nt = new Date()
-    if(nt.valueOf() >= ENDTIME.valueOf()){
-        ctx.body = {
-            message:'活动已截止',
+    const {nickname, figureurl_qq_1, number}  = ctx.request.body
+    
+    if(nt.valueOf() < STARTTIME.valueOf()){
+        return ctx.body = {
+            data,
+            message:'活动未开始',
             success:false,
-            code:9
+            code:2
         }
     }
-    const {nickname, figureurl_qq_1, number}  = ctx.request.body
     if(!number || number == 'null' || number == 'undefined'){
         return ctx.body = {
             data:[],
@@ -96,19 +99,30 @@ router.post('/getfloor', async ctx => {// 抢楼
     data.floor = userFloor.length
     if(today.length >= countNumber){
         message = '今日抢楼数已达最大，分享可额外获得10次抢楼机会。'
+        code = 3
         if(countNumber >= 30){
             message = '今日抢楼数已达最大，请明天再来。'
+            code = 4
         }
         return ctx.body = {
             data,
             message,
             success : false,
-            code:3
+            code
         }
     }
+    if(nt.valueOf() >= ENDTIME.valueOf()){
+        return ctx.body = {
+            data,
+            message:'活动已截止',
+            success:false,
+            code:9
+        }
+    } 
     const numbers = await query('select * from floor')
     const floor = await query(`insert into floor (number,qq,name,image,create_time) values 
                         ('${numbers.length+1}','${number}','${nickname}','${figureurl_qq_1}','${time}')`)
+
     if(!floor){
         message = '抢楼失败'
         success = false
@@ -139,10 +153,18 @@ router.post('/share', async ctx => {
     let code = 0
     const nt = new Date()
     if(nt.valueOf() >= ENDTIME.valueOf()){
-        ctx.body = {
+        return ctx.body = {
             message:'活动已截止',
             success:false,
             code:9
+        }
+    }
+    if(nt.valueOf() < STARTTIME.valueOf()){
+        return ctx.body = {
+            data,
+            message:'活动未开始',
+            success:false,
+            code:2
         }
     }
     let message = '今天已经分享过了，请明天分享'
@@ -172,9 +194,23 @@ router.get('/queryFloor', async ctx => {// 查询列表
     let success = true
     let message = '查询成功'
     let data = {
-        money:0
+        money:0,
+        code:0
     }
 
+    const nt = new Date()
+    if(nt.valueOf() >= ENDTIME.valueOf()){
+            data.message = '活动已截止',
+            data.code = 9
+    }
+    if(nt.valueOf() < STARTTIME.valueOf()){
+        return ctx.body = {
+            data,
+            message:'活动未开始',
+            success:false,
+            code:2
+        }
+    }
     const arr = await query('select * from floor  order by create_time desc limit 20')
 
     if(!arr){
